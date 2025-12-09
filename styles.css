@@ -1,0 +1,152 @@
+/* 全局样式重置 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
+    background-color: #f5f7fa;
+    color: #333;
+}
+
+/* 顶部导航栏 */
+.header {
+    background-color: #409EFF;
+    color: white;
+    padding: 15px 30px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header h1 {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+/* 主体内容区域 */
+.main-container {
+    display: flex;
+    height: calc(100vh - 60px);
+}
+
+/* 左侧菜单栏 */
+.sidebar {
+    width: 200px;
+    background-color: white;
+    border-right: 1px solid #e6e6e6;
+}
+
+.sidebar .el-menu {
+    height: 100%;
+    border-right: none;
+}
+
+/* 右侧内容区域 */
+.content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.content h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+    color: #303133;
+}
+
+/* 操作栏 */
+.action-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+}
+
+/* 首页仪表盘 */
+.dashboard {
+    padding: 20px 0;
+}
+
+.dashboard-cards {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.dashboard-cards .card {
+    width: 250px;
+    margin-bottom: 20px;
+}
+
+.card-content {
+    text-align: center;
+    padding: 20px;
+}
+
+.card-title {
+    font-size: 16px;
+    color: #606266;
+    margin-bottom: 10px;
+}
+
+.card-value {
+    font-size: 36px;
+    font-weight: bold;
+    color: #409EFF;
+}
+
+/* 表格样式 */
+.el-table {
+    margin-bottom: 20px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+/* 班级详情 */
+.class-details .details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.class-details .class-info {
+    margin-bottom: 20px;
+}
+
+.class-details .students-list h4 {
+    margin-bottom: 15px;
+    color: #303133;
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 768px) {
+    .main-container {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        height: auto;
+    }
+    
+    .dashboard-cards {
+        justify-content: center;
+    }
+    
+    .action-bar {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+    
+    .search-bar {
+        justify-content: center;
+    }
+}
