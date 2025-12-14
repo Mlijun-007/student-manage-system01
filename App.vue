@@ -335,6 +335,16 @@
 </template>
 
 <script>
+import axios from 'axios';
+
+// 创建API服务实例
+const apiClient = axios.create({
+  baseURL: 'http://localhost:8081',
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
 export default {
   data() {
     return {
@@ -495,8 +505,41 @@ export default {
   },
   
   methods: {
-    // 初始化示例数据
-    initData() {
+    // 初始化数据 - 从API获取
+    async initData() {
+      try {
+        // 显示加载状态
+        this.$message.loading('正在加载数据...', 0);
+        
+        // 并行请求获取所有数据
+        const [studentsRes, coursesRes, classesRes] = await Promise.all([
+          apiClient.get('/api/students'),
+          apiClient.get('/api/courses'),
+          apiClient.get('/api/classes')
+        ]);
+        
+        // 更新数据
+        this.students = studentsRes.data;
+        this.courses = coursesRes.data;
+        this.classes = classesRes.data;
+        
+        // 更新统计数据
+        this.updateStatistics();
+        
+        // 关闭加载提示
+        this.$message.closeAll();
+      } catch (error) {
+        console.error('获取数据失败:', error);
+        this.$message.closeAll();
+        this.$message.error('获取数据失败，请检查后端服务是否运行');
+        
+        // 如果API调用失败，使用本地模拟数据
+        this.initMockData();
+      }
+    },
+    
+    // 初始化模拟数据（当API调用失败时使用）
+    initMockData() {
       // 初始化课程数据
       this.courses = [
         { courseId: 1, courseName: 'JavaScript基础', description: 'JavaScript入门课程', classHour: 40, price: 1280 },
@@ -522,6 +565,8 @@ export default {
       
       // 更新统计数据
       this.updateStatistics();
+      
+      this.$message.info('已使用本地模拟数据');
     },
     
     // 菜单选择处理
@@ -600,85 +645,106 @@ export default {
       };
     },
     
-    addStudent() {
-      this.$refs.studentForm.validate((valid) => {
+    async addStudent() {
+      this.$refs.studentForm.validate(async (valid) => {
         if (valid) {
-          // 生成新的学员ID
-          const newStudentId = this.students.length > 0 
-            ? Math.max(...this.students.map(s => s.studentId)) + 1 
-            : 1;
+          try {
+            // 转换日期格式
+            const registerTime = this.formData.student.registerTime instanceof Date 
+              ? this.formData.student.registerTime.toISOString().split('T')[0] 
+              : this.formData.student.registerTime;
+            
+            // 创建新学员数据
+            const newStudent = {
+              ...this.formData.student,
+              registerTime: registerTime
+            };
+            
+            // 发送POST请求添加学员
+            const response = await apiClient.post('/api/students', newStudent);
+            
+            // 添加到学员列表
+            this.students.push(response.data);
+            
+            // 关闭对话框
+            this.dialogs.addStudentVisible = false;
+            
+            // 更新统计数据
+            this.updateStatistics();
+            
+            // 显示成功消息
+            this.$message.success('学员添加成功！');
+          } catch (error) {
+            console.error('添加学员失败:', error);
+            this.$message.error('添加学员失败，请重试');
+          }
+        } else {
+          return false;
+        }
+      });
+    },
+    
+    async updateStudent() {
+      this.$refs.studentForm.validate(async (valid) => {
+        if (valid) {
+          try {
+            // 转换日期格式
+            const registerTime = this.formData.student.registerTime instanceof Date 
+              ? this.formData.student.registerTime.toISOString().split('T')[0] 
+              : this.formData.student.registerTime;
+            
+            // 更新学员数据
+            const updatedStudent = {
+              ...this.formData.student,
+              registerTime: registerTime
+            };
+            
+            // 发送PUT请求更新学员
+            const response = await apiClient.put(`/api/students/${updatedStudent.studentId}`, updatedStudent);
+            
+            // 更新本地数据
+            const index = this.students.findIndex(s => s.studentId === updatedStudent.studentId);
+            if (index !== -1) {
+              this.students[index] = response.data;
+            }
+            
+            // 关闭对话框
+            this.dialogs.editStudentVisible = false;
+            
+            // 显示成功消息
+            this.$message.success('学员信息更新成功！');
+          } catch (error) {
+            console.error('更新学员失败:', error);
+            this.$message.error('更新学员失败，请重试');
+          }
+        } else {
+          return false;
+        }
+      });
+    },
+    
+    async confirmDeleteStudent(student) {
+      this.$confirm('确定要删除该学员吗？', '删除确认', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        try {
+          // 发送DELETE请求删除学员
+          await apiClient.delete(`/api/students/${student.studentId}`);
           
-          // 转换日期格式
-          const registerTime = this.formData.student.registerTime instanceof Date 
-            ? this.formData.student.registerTime.toISOString().split('T')[0] 
-            : this.formData.student.registerTime;
-          
-          // 创建新学员
-          const newStudent = {
-            ...this.formData.student,
-            studentId: newStudentId,
-            registerTime: registerTime
-          };
-          
-          // 添加到学员列表
-          this.students.push(newStudent);
-          
-          // 关闭对话框
-          this.dialogs.addStudentVisible = false;
+          // 更新本地数据
+          this.students = this.students.filter(s => s.studentId !== student.studentId);
           
           // 更新统计数据
           this.updateStatistics();
           
           // 显示成功消息
-          this.$message.success('学员添加成功！');
-        } else {
-          return false;
+          this.$message.success('学员删除成功！');
+        } catch (error) {
+          console.error('删除学员失败:', error);
+          this.$message.error('删除学员失败，请重试');
         }
-      });
-    },
-    
-    updateStudent() {
-      this.$refs.studentForm.validate((valid) => {
-        if (valid) {
-          // 转换日期格式
-          const registerTime = this.formData.student.registerTime instanceof Date 
-            ? this.formData.student.registerTime.toISOString().split('T')[0] 
-            : this.formData.student.registerTime;
-          
-          // 更新学员数据
-          const index = this.students.findIndex(s => s.studentId === this.formData.student.studentId);
-          if (index !== -1) {
-            this.students[index] = {
-              ...this.formData.student,
-              registerTime: registerTime
-            };
-          }
-          
-          // 关闭对话框
-          this.dialogs.editStudentVisible = false;
-          
-          // 显示成功消息
-          this.$message.success('学员信息更新成功！');
-        } else {
-          return false;
-        }
-      });
-    },
-    
-    confirmDeleteStudent(student) {
-      this.$confirm('确定要删除该学员吗？', '删除确认', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        // 删除学员
-        this.students = this.students.filter(s => s.studentId !== student.studentId);
-        
-        // 更新统计数据
-        this.updateStatistics();
-        
-        // 显示成功消息
-        this.$message.success('学员删除成功！');
       }).catch(() => {
         // 取消删除
         this.$message.info('已取消删除');
@@ -715,83 +781,109 @@ export default {
       };
     },
     
-    addCourse() {
-      this.$refs.courseForm.validate((valid) => {
+    async addCourse() {
+      this.$refs.courseForm.validate(async (valid) => {
         if (valid) {
-          // 生成新的课程ID
-          const newCourseId = this.courses.length > 0 
-            ? Math.max(...this.courses.map(c => c.courseId)) + 1 
-            : 1;
-          
-          // 创建新课程
-          const newCourse = {
-            ...this.formData.course,
-            courseId: newCourseId
-          };
-          
-          // 添加到课程列表
-          this.courses.push(newCourse);
-          
-          // 关闭对话框
-          this.dialogs.addCourseVisible = false;
-          
-          // 更新统计数据
-          this.updateStatistics();
-          
-          // 显示成功消息
-          this.$message.success('课程添加成功！');
-        } else {
-          return false;
-        }
-      });
-    },
-    
-    updateCourse() {
-      this.$refs.courseForm.validate((valid) => {
-        if (valid) {
-          // 更新课程数据
-          const index = this.courses.findIndex(c => c.courseId === this.formData.course.courseId);
-          if (index !== -1) {
-            this.courses[index] = {...this.formData.course};
+          try {
+            // 创建新课程数据
+            const newCourse = {
+              ...this.formData.course
+            };
+            
+            // 发送POST请求添加课程
+            const response = await apiClient.post('/api/courses', newCourse);
+            
+            // 添加到课程列表
+            this.courses.push(response.data);
+            
+            // 关闭对话框
+            this.dialogs.addCourseVisible = false;
+            
+            // 更新统计数据
+            this.updateStatistics();
+            
+            // 显示成功消息
+            this.$message.success('课程添加成功！');
+          } catch (error) {
+            console.error('添加课程失败:', error);
+            this.$message.error('添加课程失败，请重试');
           }
-          
-          // 关闭对话框
-          this.dialogs.editCourseVisible = false;
-          
-          // 显示成功消息
-          this.$message.success('课程信息更新成功！');
         } else {
           return false;
         }
       });
     },
     
-    confirmDeleteCourse(course) {
-      // 检查课程是否被班级引用
-      const isUsed = this.classes.some(clazz => clazz.courseId === course.courseId);
-      
-      if (isUsed) {
-        this.$message.error('该课程已有班级在使用，无法删除');
-        return;
-      }
-      
-      this.$confirm('确定要删除该课程吗？', '删除确认', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        // 删除课程
-        this.courses = this.courses.filter(c => c.courseId !== course.courseId);
-        
-        // 更新统计数据
-        this.updateStatistics();
-        
-        // 显示成功消息
-        this.$message.success('课程删除成功！');
-      }).catch(() => {
-        // 取消删除
-        this.$message.info('已取消删除');
+    async updateCourse() {
+      this.$refs.courseForm.validate(async (valid) => {
+        if (valid) {
+          try {
+            // 更新课程数据
+            const updatedCourse = {...this.formData.course};
+            
+            // 发送PUT请求更新课程
+            const response = await apiClient.put(`/api/courses/${updatedCourse.courseId}`, updatedCourse);
+            
+            // 更新本地数据
+            const index = this.courses.findIndex(c => c.courseId === updatedCourse.courseId);
+            if (index !== -1) {
+              this.courses[index] = response.data;
+            }
+            
+            // 关闭对话框
+            this.dialogs.editCourseVisible = false;
+            
+            // 显示成功消息
+            this.$message.success('课程信息更新成功！');
+          } catch (error) {
+            console.error('更新课程失败:', error);
+            this.$message.error('更新课程失败，请重试');
+          }
+        } else {
+          return false;
+        }
       });
+    },
+    
+    async confirmDeleteCourse(course) {
+      try {
+        // 检查课程是否被班级引用
+        const isUsed = this.classes.some(clazz => clazz.courseId === course.courseId);
+        
+        if (isUsed) {
+          this.$message.error('该课程已有班级在使用，无法删除');
+          return;
+        }
+        
+        this.$confirm('确定要删除该课程吗？', '删除确认', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(async () => {
+          try {
+            // 发送DELETE请求删除课程
+            await apiClient.delete(`/api/courses/${course.courseId}`);
+            
+            // 删除课程
+            this.courses = this.courses.filter(c => c.courseId !== course.courseId);
+            
+            // 更新统计数据
+            this.updateStatistics();
+            
+            // 显示成功消息
+            this.$message.success('课程删除成功！');
+          } catch (error) {
+            console.error('删除课程失败:', error);
+            this.$message.error('删除课程失败，请重试');
+          }
+        }).catch(() => {
+          // 取消删除
+          this.$message.info('已取消删除');
+        });
+      } catch (error) {
+        console.error('删除课程失败:', error);
+        this.$message.error('删除课程失败，请重试');
+      }
     },
     
     // 班级管理相关方法
@@ -820,37 +912,39 @@ export default {
       };
     },
     
-    addClass() {
-      this.$refs.classForm.validate((valid) => {
+    async addClass() {
+      this.$refs.classForm.validate(async (valid) => {
         if (valid) {
-          // 生成新的班级ID
-          const newClassId = this.classes.length > 0 
-            ? Math.max(...this.classes.map(c => c.classId)) + 1 
-            : 1;
-          
-          // 转换日期格式
-          const startDate = this.formData.clazz.startDate instanceof Date 
-            ? this.formData.clazz.startDate.toISOString().split('T')[0] 
-            : this.formData.clazz.startDate;
-          
-          // 创建新班级
-          const newClass = {
-            ...this.formData.clazz,
-            classId: newClassId,
-            startDate: startDate
-          };
-          
-          // 添加到班级列表
-          this.classes.push(newClass);
-          
-          // 关闭对话框
-          this.dialogs.addClassVisible = false;
-          
-          // 更新统计数据
-          this.updateStatistics();
-          
-          // 显示成功消息
-          this.$message.success('班级添加成功！');
+          try {
+            // 转换日期格式
+            const startDate = this.formData.clazz.startDate instanceof Date 
+              ? this.formData.clazz.startDate.toISOString().split('T')[0] 
+              : this.formData.clazz.startDate;
+            
+            // 创建新班级数据
+            const newClass = {
+              ...this.formData.clazz,
+              startDate: startDate
+            };
+            
+            // 发送POST请求添加班级
+            const response = await apiClient.post('/api/classes', newClass);
+            
+            // 添加到班级列表
+            this.classes.push(response.data);
+            
+            // 关闭对话框
+            this.dialogs.addClassVisible = false;
+            
+            // 更新统计数据
+            this.updateStatistics();
+            
+            // 显示成功消息
+            this.$message.success('班级添加成功！');
+          } catch (error) {
+            console.error('添加班级失败:', error);
+            this.$message.error('添加班级失败，请重试');
+          }
         } else {
           return false;
         }
