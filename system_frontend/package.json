@@ -1,27 +1,35 @@
 {
-  "name": "system_frontend",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
-  "engines": {
-    "node": "^20.19.0 || >=22.12.0"
-  },
+  "name": "training-center-management-system",
+  "version": "1.0.0",
+  "description": "机构学生信息管理系统",
+  "main": "main.js",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "lint": "eslint . --fix --cache"
+    "dev": "webpack-dev-server --mode development --open",
+    "build": "webpack --mode production"
   },
   "dependencies": {
-    "vue": "^3.5.25"
+    "axios": "^1.13.2",
+    "element-ui": "^2.15.12",
+    "vue": "^2.6.14"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.1",
-    "@vitejs/plugin-vue": "^6.0.2",
-    "eslint": "^9.39.1",
-    "eslint-plugin-vue": "~10.5.1",
-    "globals": "^16.5.0",
-    "vite": "^7.2.4",
-    "vite-plugin-vue-devtools": "^8.0.5"
-  }
+    "@babel/core": "^7.18.0",
+    "@babel/preset-env": "^7.18.0",
+    "babel-loader": "^8.2.5",
+    "css-loader": "^6.7.1",
+    "html-webpack-plugin": "^5.5.0",
+    "style-loader": "^3.3.1",
+    "vue-loader": "^15.9.8",
+    "vue-template-compiler": "^2.6.14",
+    "webpack": "^5.72.1",
+    "webpack-cli": "^4.9.2",
+    "webpack-dev-server": "^4.9.0"
+  },
+  "keywords": [
+    "vue",
+    "element-ui",
+    "management-system"
+  ],
+  "author": "",
+  "license": "MIT"
 }
