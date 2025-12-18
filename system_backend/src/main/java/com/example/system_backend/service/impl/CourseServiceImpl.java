@@ -23,17 +23,9 @@ public class CourseServiceImpl implements CourseService {
     
     @Override
     public Course createCourse(CourseDTO courseDTO) {
-        // 二次验证：检查课程代码是否已存在
-        if (courseRepository.existsByCourseCode(courseDTO.getCourseCode())) {
-            throw new IllegalArgumentException("课程代码" + courseDTO.getCourseCode() + "已存在");
-        }
-        
         // 将DTO转换为Entity
         Course course = new Course();
-        course.setName(courseDTO.getName());
-        course.setCourseCode(courseDTO.getCourseCode());
-        course.setTeacher(courseDTO.getTeacher());
-        course.setCredit(courseDTO.getCredit());
+        course.setCourseName(courseDTO.getCourseName());
         course.setDescription(courseDTO.getDescription());
         course.setPrice(courseDTO.getPrice());
         course.setClassHour(courseDTO.getClassHour());
@@ -62,17 +54,8 @@ public class CourseServiceImpl implements CourseService {
         Course existingCourse = courseRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("课程不存在，ID: " + id));
         
-        // 二次验证：检查课程代码是否已存在（如果课程代码有变化）
-        if (!existingCourse.getCourseCode().equals(courseDTO.getCourseCode()) && 
-            courseRepository.existsByCourseCode(courseDTO.getCourseCode())) {
-            throw new IllegalArgumentException("课程代码" + courseDTO.getCourseCode() + "已存在");
-        }
-        
         // 更新课程信息
-        existingCourse.setName(courseDTO.getName());
-        existingCourse.setCourseCode(courseDTO.getCourseCode());
-        existingCourse.setTeacher(courseDTO.getTeacher());
-        existingCourse.setCredit(courseDTO.getCredit());
+        existingCourse.setCourseName(courseDTO.getCourseName());
         existingCourse.setDescription(courseDTO.getDescription());
         existingCourse.setPrice(courseDTO.getPrice());
         existingCourse.setClassHour(courseDTO.getClassHour());

@@ -41,23 +41,19 @@ class StudentServiceImplTest {
         // 准备测试数据
         StudentDTO studentDTO = new StudentDTO();
         studentDTO.setName("张三");
-        studentDTO.setStudentId("20230001");
-        studentDTO.setEmail("zhangsan@example.com");
         studentDTO.setPhone("13800138000");
-        studentDTO.setMajor("计算机科学");
         studentDTO.setClassId(1L);
         studentDTO.setGender("MALE");
         studentDTO.setRegisterTime("2023-09-01");
+        studentDTO.setRemark("优秀学生");
 
         Student savedStudent = new Student();
         savedStudent.setId(1L);
         savedStudent.setName(studentDTO.getName());
-        savedStudent.setStudentId(studentDTO.getStudentId());
-        savedStudent.setEmail(studentDTO.getEmail());
         savedStudent.setPhone(studentDTO.getPhone());
-        savedStudent.setMajor(studentDTO.getMajor());
         savedStudent.setGender(Student.Gender.MALE);
         savedStudent.setRegisterTime(LocalDate.parse(studentDTO.getRegisterTime()));
+        savedStudent.setRemark(studentDTO.getRemark());
 
         // 模拟班级Repository
         ClassEntity clazz = new ClassEntity();
@@ -66,8 +62,6 @@ class StudentServiceImplTest {
         when(classRepository.findById(studentDTO.getClassId())).thenReturn(Optional.of(clazz));
         
         // 模拟学生Repository方法
-        when(studentRepository.existsByStudentId(studentDTO.getStudentId())).thenReturn(false);
-        when(studentRepository.existsByEmail(studentDTO.getEmail())).thenReturn(false);
         when(studentRepository.save(any(Student.class))).thenReturn(savedStudent);
         
         // 设置学生的班级属性
@@ -80,49 +74,15 @@ class StudentServiceImplTest {
         assertNotNull(result);
         assertEquals(savedStudent.getId(), result.getId());
         assertEquals(savedStudent.getName(), result.getName());
-        verify(studentRepository).existsByStudentId(studentDTO.getStudentId());
-        verify(studentRepository).existsByEmail(studentDTO.getEmail());
+        assertEquals(savedStudent.getPhone(), result.getPhone());
+        assertEquals(savedStudent.getGender(), result.getGender());
+        assertEquals(savedStudent.getRegisterTime(), result.getRegisterTime());
+        assertEquals(savedStudent.getRemark(), result.getRemark());
+        verify(classRepository).findById(studentDTO.getClassId());
         verify(studentRepository).save(any(Student.class));
     }
 
-    @Test
-    void testCreateStudent_DuplicateStudentId() {
-        // 准备测试数据
-        StudentDTO studentDTO = new StudentDTO();
-        studentDTO.setStudentId("20230001");
-        studentDTO.setEmail("zhangsan@example.com");
 
-        // 模拟Repository方法
-        when(studentRepository.existsByStudentId(studentDTO.getStudentId())).thenReturn(true);
-
-        // 执行测试并验证异常
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> studentService.createStudent(studentDTO));
-        assertEquals("学号" + studentDTO.getStudentId() + "已存在", exception.getMessage());
-        verify(studentRepository).existsByStudentId(studentDTO.getStudentId());
-        verify(studentRepository, never()).existsByEmail(anyString());
-        verify(studentRepository, never()).save(any(Student.class));
-    }
-
-    @Test
-    void testCreateStudent_DuplicateEmail() {
-        // 准备测试数据
-        StudentDTO studentDTO = new StudentDTO();
-        studentDTO.setStudentId("20230001");
-        studentDTO.setEmail("zhangsan@example.com");
-
-        // 模拟Repository方法
-        when(studentRepository.existsByStudentId(studentDTO.getStudentId())).thenReturn(false);
-        when(studentRepository.existsByEmail(studentDTO.getEmail())).thenReturn(true);
-
-        // 执行测试并验证异常
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> studentService.createStudent(studentDTO));
-        assertEquals("邮箱" + studentDTO.getEmail() + "已存在", exception.getMessage());
-        verify(studentRepository).existsByStudentId(studentDTO.getStudentId());
-        verify(studentRepository).existsByEmail(studentDTO.getEmail());
-        verify(studentRepository, never()).save(any(Student.class));
-    }
 
     @Test
     void testGetStudentById_Success() {
@@ -192,33 +152,27 @@ class StudentServiceImplTest {
         Long studentId = 1L;
         StudentDTO studentDTO = new StudentDTO();
         studentDTO.setName("张三更新");
-        studentDTO.setStudentId("20230001");
-        studentDTO.setEmail("zhangsan_updated@example.com");
-        studentDTO.setPhone("13800138000");
-        studentDTO.setMajor("计算机科学");
+        studentDTO.setPhone("13800138001");
         studentDTO.setClassId(1L);
-        studentDTO.setGender("MALE");
-        studentDTO.setRegisterTime("2023-09-01");
+        studentDTO.setGender("FEMALE");
+        studentDTO.setRegisterTime("2023-09-02");
+        studentDTO.setRemark("更新后的备注");
 
         Student existingStudent = new Student();
         existingStudent.setId(studentId);
         existingStudent.setName("张三");
-        existingStudent.setStudentId("20230001");
-        existingStudent.setEmail("zhangsan@example.com");
         existingStudent.setPhone("13800138000");
-        existingStudent.setMajor("计算机科学");
         existingStudent.setGender(Student.Gender.MALE);
-        existingStudent.setRegisterTime(LocalDate.parse(studentDTO.getRegisterTime()));
+        existingStudent.setRegisterTime(LocalDate.parse("2023-09-01"));
+        existingStudent.setRemark("原始备注");
 
         Student updatedStudent = new Student();
         updatedStudent.setId(studentId);
         updatedStudent.setName(studentDTO.getName());
-        updatedStudent.setStudentId(studentDTO.getStudentId());
-        updatedStudent.setEmail(studentDTO.getEmail());
         updatedStudent.setPhone(studentDTO.getPhone());
-        updatedStudent.setMajor(studentDTO.getMajor());
-        updatedStudent.setGender(Student.Gender.MALE);
+        updatedStudent.setGender(Student.Gender.FEMALE);
         updatedStudent.setRegisterTime(LocalDate.parse(studentDTO.getRegisterTime()));
+        updatedStudent.setRemark(studentDTO.getRemark());
 
         // 模拟班级Repository
         ClassEntity clazz = new ClassEntity();
@@ -228,8 +182,6 @@ class StudentServiceImplTest {
         
         // 模拟学生Repository方法
         when(studentRepository.findById(studentId)).thenReturn(Optional.of(existingStudent));
-        when(studentRepository.existsByStudentId(studentDTO.getStudentId())).thenReturn(false);
-        when(studentRepository.existsByEmail(studentDTO.getEmail())).thenReturn(false);
         when(studentRepository.save(any(Student.class))).thenReturn(updatedStudent);
         
         // 设置学生的班级属性
@@ -242,11 +194,12 @@ class StudentServiceImplTest {
         // 验证结果
         assertNotNull(result);
         assertEquals(updatedStudent.getName(), result.getName());
-        assertEquals(updatedStudent.getEmail(), result.getEmail());
+        assertEquals(updatedStudent.getPhone(), result.getPhone());
+        assertEquals(updatedStudent.getGender(), result.getGender());
+        assertEquals(updatedStudent.getRegisterTime(), result.getRegisterTime());
+        assertEquals(updatedStudent.getRemark(), result.getRemark());
         verify(studentRepository).findById(studentId);
-        // 学号没有变化，所以existsByStudentId不会被调用
-        verify(studentRepository, never()).existsByStudentId(studentDTO.getStudentId());
-        verify(studentRepository).existsByEmail(studentDTO.getEmail());
+        verify(classRepository).findById(studentDTO.getClassId());
         verify(studentRepository).save(any(Student.class));
     }
 
@@ -267,57 +220,7 @@ class StudentServiceImplTest {
         verify(studentRepository, never()).save(any(Student.class));
     }
 
-    @Test
-    void testUpdateStudent_DuplicateStudentId() {
-        // 准备测试数据
-        Long studentId = 1L;
-        StudentDTO studentDTO = new StudentDTO();
-        studentDTO.setStudentId("20230002"); // 新学号
-        studentDTO.setEmail("zhangsan@example.com");
 
-        Student existingStudent = new Student();
-        existingStudent.setId(studentId);
-        existingStudent.setStudentId("20230001"); // 旧学号不同
-        existingStudent.setEmail("zhangsan@example.com");
-
-        // 模拟Repository方法
-        when(studentRepository.findById(studentId)).thenReturn(Optional.of(existingStudent));
-        when(studentRepository.existsByStudentId(studentDTO.getStudentId())).thenReturn(true);
-
-        // 执行测试并验证异常
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> studentService.updateStudent(studentId, studentDTO));
-        assertEquals("学号" + studentDTO.getStudentId() + "已存在", exception.getMessage());
-        verify(studentRepository).findById(studentId);
-        verify(studentRepository).existsByStudentId(studentDTO.getStudentId());
-        verify(studentRepository, never()).save(any(Student.class));
-    }
-
-    @Test
-    void testUpdateStudent_DuplicateEmail() {
-        // 准备测试数据
-        Long studentId = 1L;
-        StudentDTO studentDTO = new StudentDTO();
-        studentDTO.setStudentId("20230001");
-        studentDTO.setEmail("lisi@example.com"); // 新邮箱
-
-        Student existingStudent = new Student();
-        existingStudent.setId(studentId);
-        existingStudent.setStudentId("20230001");
-        existingStudent.setEmail("zhangsan@example.com"); // 旧邮箱不同
-
-        // 模拟Repository方法
-        when(studentRepository.findById(studentId)).thenReturn(Optional.of(existingStudent));
-        when(studentRepository.existsByEmail(studentDTO.getEmail())).thenReturn(true);
-
-        // 执行测试并验证异常
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> studentService.updateStudent(studentId, studentDTO));
-        assertEquals("邮箱" + studentDTO.getEmail() + "已存在", exception.getMessage());
-        verify(studentRepository).findById(studentId);
-        verify(studentRepository).existsByEmail(studentDTO.getEmail());
-        verify(studentRepository, never()).save(any(Student.class));
-    }
 
     @Test
     void testDeleteStudent_Success() {

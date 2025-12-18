@@ -1,7 +1,6 @@
 package com.example.system_backend.controller;
 
 import com.example.system_backend.dto.StudentDTO;
-import com.example.system_backend.dto.ResponseDTO;
 import com.example.system_backend.entity.Student;
 import com.example.system_backend.service.StudentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,11 +11,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 import java.util.NoSuchElementException;
 
@@ -34,7 +33,7 @@ public class StudentController {
         responseCode = "201",
         description = "学生创建成功",
         content = @Content(
-            schema = @Schema(implementation = ResponseDTO.class)
+            schema = @Schema(implementation = Student.class)
         )
     )
     @ApiResponse(
@@ -48,46 +47,46 @@ public class StudentController {
         responseCode = "400",
         description = "验证错误示例",
         content = @Content(
-            examples = @ExampleObject(value = "{\"code\": 400, \"message\": \"性别无效，必须是男/女\", \"data\": null}")
+            examples = @ExampleObject(value = "{\"code\": 400, \"message\": \"性别无效，必须是男/女/其他\", \"data\": null}")
         )
     )
     @PostMapping
-    public ResponseEntity<ResponseDTO<Student>> createStudent(@Valid @RequestBody StudentDTO studentDTO) {
+    public ResponseEntity<Student> createStudent(@Valid @RequestBody StudentDTO studentDTO) {
         Student student = studentService.createStudent(studentDTO);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ResponseDTO.success("学生创建成功", student));
+                .body(student);
     }
     
     // 获取学生详情
     @Operation(summary = "获取学生详情", description = "根据ID获取学生的详细信息")
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseDTO<Student>> getStudentById(@PathVariable Long id) {
+    public ResponseEntity<Student> getStudentById(@PathVariable Long id) {
         Student student = studentService.getStudentById(id)
                 .orElseThrow(() -> new NoSuchElementException("学生不存在，ID: " + id));
-        return ResponseEntity.ok(ResponseDTO.success("获取学生成功", student));
+        return ResponseEntity.ok(student);
     }
     
-    // 获取学生列表（分页）
-    @Operation(summary = "获取学生列表", description = "分页获取所有学生信息")
+    // 获取学生列表（直接返回列表，不使用分页，以匹配前端需求）
+    @Operation(summary = "获取学生列表", description = "获取所有学生信息列表")
     @GetMapping
-    public ResponseEntity<ResponseDTO<Page<Student>>> getAllStudents(Pageable pageable) {
-        Page<Student> students = studentService.getAllStudents(pageable);
-        return ResponseEntity.ok(ResponseDTO.success("获取学生列表成功", students));
+     public ResponseEntity<List<Student>> getAllStudents() {
+        List<Student> students = studentService.getAllStudents();
+        return ResponseEntity.ok(students);
     }
     
     // 更新学生信息
     @Operation(summary = "更新学生信息", description = "根据ID更新学生的详细信息")
     @PutMapping("/{id}")
-    public ResponseEntity<ResponseDTO<Student>> updateStudent(@PathVariable Long id, @Valid @RequestBody StudentDTO studentDTO) {
+    public ResponseEntity<Student> updateStudent(@PathVariable Long id, @Valid @RequestBody StudentDTO studentDTO) {
         Student student = studentService.updateStudent(id, studentDTO);
-        return ResponseEntity.ok(ResponseDTO.success("学生更新成功", student));
+        return ResponseEntity.ok(student);
     }
     
     // 删除学生
     @Operation(summary = "删除学生", description = "根据ID删除学生信息")
     @DeleteMapping("/{id}")
-    public ResponseEntity<ResponseDTO<Void>> deleteStudent(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteStudent(@PathVariable Long id) {
         studentService.deleteStudent(id);
-        return ResponseEntity.ok(ResponseDTO.success("学生删除成功", null));
+        return ResponseEntity.ok().build();
     }
 }

@@ -30,16 +30,6 @@ public class StudentServiceImpl implements StudentService {
     
     @Override
     public Student createStudent(StudentDTO studentDTO) {
-        // 二次验证：检查学号是否已存在
-        if (studentRepository.existsByStudentId(studentDTO.getStudentId())) {
-            throw new IllegalArgumentException("学号" + studentDTO.getStudentId() + "已存在");
-        }
-        
-        // 二次验证：检查邮箱是否已存在
-        if (studentRepository.existsByEmail(studentDTO.getEmail())) {
-            throw new IllegalArgumentException("邮箱" + studentDTO.getEmail() + "已存在");
-        }
-        
         // 二次验证：手机号码格式校验（兜底校验）
         Pattern phonePattern = Pattern.compile("^1[3-9]\\d{9}$");
         if (!phonePattern.matcher(studentDTO.getPhone()).matches()) {
@@ -51,7 +41,7 @@ public class StudentServiceImpl implements StudentService {
         try {
             gender = Student.Gender.valueOf(studentDTO.getGender().toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("性别无效，必须是男/女");
+            throw new IllegalArgumentException("性别无效，必须是男/女/其他");
         }
         
         // 二次验证：检查班级ID是否存在
@@ -69,10 +59,7 @@ public class StudentServiceImpl implements StudentService {
         // 将DTO转换为Entity
         Student student = new Student();
         student.setName(studentDTO.getName());
-        student.setStudentId(studentDTO.getStudentId());
-        student.setEmail(studentDTO.getEmail());
         student.setPhone(studentDTO.getPhone());
-        student.setMajor(studentDTO.getMajor());
         student.setClazz(clazz);
         student.setGender(gender);
         student.setRegisterTime(registerTime);
@@ -102,18 +89,6 @@ public class StudentServiceImpl implements StudentService {
         Student existingStudent = studentRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("学生不存在，ID: " + id));
         
-        // 二次验证：检查学号是否已存在（如果学号有变化）
-        if (!existingStudent.getStudentId().equals(studentDTO.getStudentId()) && 
-            studentRepository.existsByStudentId(studentDTO.getStudentId())) {
-            throw new IllegalArgumentException("学号" + studentDTO.getStudentId() + "已存在");
-        }
-        
-        // 二次验证：检查邮箱是否已存在（如果邮箱有变化）
-        if (!existingStudent.getEmail().equals(studentDTO.getEmail()) && 
-            studentRepository.existsByEmail(studentDTO.getEmail())) {
-            throw new IllegalArgumentException("邮箱" + studentDTO.getEmail() + "已存在");
-        }
-        
         // 二次验证：手机号码格式校验（兜底校验）
         Pattern phonePattern = Pattern.compile("^1[3-9]\\d{9}$");
         if (!phonePattern.matcher(studentDTO.getPhone()).matches()) {
@@ -125,7 +100,7 @@ public class StudentServiceImpl implements StudentService {
         try {
             gender = Student.Gender.valueOf(studentDTO.getGender().toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("性别无效，必须是男/女");
+            throw new IllegalArgumentException("性别无效，必须是男/女/其他");
         }
         
         // 二次验证：检查班级ID是否存在
@@ -142,10 +117,7 @@ public class StudentServiceImpl implements StudentService {
         
         // 更新学生信息
         existingStudent.setName(studentDTO.getName());
-        existingStudent.setStudentId(studentDTO.getStudentId());
-        existingStudent.setEmail(studentDTO.getEmail());
         existingStudent.setPhone(studentDTO.getPhone());
-        existingStudent.setMajor(studentDTO.getMajor());
         existingStudent.setClazz(clazz);
         existingStudent.setGender(gender);
         existingStudent.setRegisterTime(registerTime);

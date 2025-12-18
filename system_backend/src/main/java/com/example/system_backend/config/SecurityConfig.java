@@ -49,10 +49,8 @@ public class SecurityConfig {
                                 .requestMatchers(
                                         "/swagger-ui/**",
                                         "/v3/api-docs/**",
-                                        "/h2-console/**"
+                                        "/api/**" // 开发环境中API接口公开访问
                                 ).permitAll()
-                                // 管理员角色可以访问所有API
-                                .requestMatchers("/api/**").hasRole("ADMIN")
                                 // 其他请求都需要认证
                                 .anyRequest().authenticated()
                 )
@@ -63,14 +61,13 @@ public class SecurityConfig {
                 )
                 // 配置基本认证
                 .httpBasic(httpBasic -> {})
-                // 配置CSRF（禁用H2控制台的CSRF保护）
+                // 配置CSRF
                 .csrf(csrf ->
-                        csrf
-                                .ignoringRequestMatchers("/h2-console/**")
+                        csrf.disable() // 开发环境中禁用CSRF保护，生产环境中应该启用
                 )
-                // 允许H2控制台的iframe访问
+                // 配置安全头
                 .headers(headers ->
-                        headers.frameOptions(frameOptions -> frameOptions.disable())
+                        headers.frameOptions(frameOptions -> frameOptions.deny()) // 禁用iframe，提高安全性
                 );
 
         return http.build();

@@ -12,17 +12,8 @@ public class Course {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(name = "name", nullable = false, length = 100)
-    private String name;
-    
-    @Column(name = "course_code", nullable = false, unique = true, length = 20)
-    private String courseCode;
-    
-    @Column(name = "teacher", nullable = false, length = 50)
-    private String teacher;
-    
-    @Column(name = "credit", nullable = false)
-    private BigDecimal credit;
+    @Column(name = "course_name", nullable = false, length = 100)
+    private String courseName;
     
     @Column(name = "description", length = 200)
     private String description;

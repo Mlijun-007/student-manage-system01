@@ -20,7 +20,7 @@ public class SwaggerConfig {
                         .contact(new Contact()
                                 .name("开发团队")
                                 .email("admin@example.com")
-                                .url("http://localhost:8081"))
+                                .url("http://localhost:8080"))
                         .license(new License()
                                 .name("Apache 2.0")
                                 .url("http://springdoc.org")));

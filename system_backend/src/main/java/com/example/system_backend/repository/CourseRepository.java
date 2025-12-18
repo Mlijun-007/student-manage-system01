@@ -4,10 +4,8 @@ import com.example.system_backend.entity.Course;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
 
 @Repository
 public interface CourseRepository extends JpaRepository<Course, Long> {
-    Optional<Course> findByCourseCode(String courseCode);
-    boolean existsByCourseCode(String courseCode);
+    // 移除了与courseCode相关的方法，因为courseCode字段已从Course实体中删除
 }

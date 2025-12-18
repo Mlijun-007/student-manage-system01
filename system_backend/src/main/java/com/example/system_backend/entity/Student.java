@@ -15,17 +15,8 @@ public class Student {
     @Column(name = "name", nullable = false, length = 50)
     private String name;
     
-    @Column(name = "student_id", nullable = false, unique = true, length = 20)
-    private String studentId;
-    
-    @Column(name = "email", nullable = false, unique = true, length = 100)
-    private String email;
-    
     @Column(name = "phone", nullable = false, length = 20)
     private String phone;
-    
-    @Column(name = "major", nullable = false, length = 50)
-    private String major;
     
     @ManyToOne
     @JoinColumn(name = "class_id", nullable = false)
@@ -43,7 +34,20 @@ public class Student {
     
     // 性别枚举
     public enum Gender {
-        MALE,   // 男
-        FEMALE  // 女
+        MALE("男"),   // 男
+        FEMALE("女"),  // 女
+        OTHER("其他");  // 其他
+        
+        private final String displayName;
+        
+        // 构造器
+        Gender(String displayName) {
+            this.displayName = displayName;
+        }
+        
+        // 获取显示名称
+        public String getDisplayName() {
+            return displayName;
+        }
     }
 }
